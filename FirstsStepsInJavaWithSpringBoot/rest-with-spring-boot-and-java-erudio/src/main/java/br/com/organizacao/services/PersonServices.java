@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.organizacao.data.vo.v1.PersonVO;
 import br.com.organizacao.exceptions.ResourceNotFoundException;
+import br.com.organizacao.mapper.DozzerMapper;
 import br.com.organizacao.model.Person;
 import br.com.organizacao.repositories.PersonRepository;
 
@@ -18,23 +20,27 @@ public class PersonServices {
 	@Autowired
 	PersonRepository repository;
 	
-	public List<Person> findAll() {
+	public List<PersonVO> findAll() {
 		logger.info("Finding all people!");
-		return repository.findAll() ;
+		return DozzerMapper.parseListObject( repository.findAll(), PersonVO.class);
 	}
 	
-	public Person findById(Long id) {
+	public PersonVO findById(Long id) {
 		logger.info("Finding one person!");
-		return repository.findById(id)
+		var entity = repository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("No records found for this id"));
+		return DozzerMapper.parseObject(entity, PersonVO.class);
 	}
 	
-	public Person create(Person person) {
+	public PersonVO create(PersonVO person) {
 		logger.info("Creating person!");
-		return repository.save(person);
+		
+		var entity = DozzerMapper.parseObject(person, Person.class);
+		var vo =  DozzerMapper.parseObject(repository.save(entity), PersonVO.class);
+		return vo;
 	}
 	
-	public Person update(Person person) {
+	public PersonVO update(PersonVO person) {
 		logger.info("Updating person!");
 		var entity = repository.findById(person.getId())
 				.orElseThrow(() -> new ResourceNotFoundException("No records found for this id"));
@@ -42,7 +48,8 @@ public class PersonServices {
 		entity.setLastName(person.getLastName());
 		entity.setAdress(person.getAdress());
 		entity.setGender(person.getGender());
-		return repository.save(person);
+		var vo =  DozzerMapper.parseObject(repository.save(entity), PersonVO.class);
+		return vo;
 	}
 	public void delete(Long id) {
 		logger.info("Deleting person!");
